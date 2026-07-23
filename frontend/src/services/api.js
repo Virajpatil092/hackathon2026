@@ -36,6 +36,11 @@ export const ENDPOINTS = {
   getCarbonBenchmarks:   { method: 'GET',    path: '/carbon-footprint/benchmarks' },
   logCarbonActivity:     { method: 'POST',   path: '/carbon-footprint/activities' },
 
+  // MCC Data & Mapping
+  getDistinctMCCs:       { method: 'GET',    path: '/carbon-footprint/mcc/distinct' },
+  getMCCByCategory:      { method: 'GET',    path: '/carbon-footprint/mcc/categories' },
+  getMCCStats:           { method: 'GET',    path: '/carbon-footprint/mcc/stats' },
+
   // Recommendations
   getRecommendations:    { method: 'GET',    path: '/recommendations' },
   dismissRecommendation: { method: 'GET',    path: '/recommendations/:id/dismiss' },
@@ -409,6 +414,31 @@ export async function getCarbonBenchmarks() {
 export async function logCarbonActivity(body) {
   if (!USE_MOCK) return apiRequest(ENDPOINTS.logCarbonActivity, { body });
   return { success: true, id: 'act-new' };
+}
+
+// MCC Data & Carbon Mapping
+export async function getDistinctMCCs() {
+  if (!USE_MOCK) return apiRequest(ENDPOINTS.getDistinctMCCs);
+  // Mock data structure: array of MCC objects with category and emission factor
+  return [];
+}
+
+export async function getMCCByCategory() {
+  if (!USE_MOCK) return apiRequest(ENDPOINTS.getMCCByCategory);
+  // Returns object with categories as keys and arrays of MCCs as values
+  return {};
+}
+
+export async function getMCCStats() {
+  if (!USE_MOCK) return apiRequest(ENDPOINTS.getMCCStats);
+  // Returns statistics about MCC codes in the data
+  return {
+    totalDistinctMCCs: 0,
+    totalCategories: 0,
+    totalTransactions: 0,
+    categories: [],
+    emissionFactorRange: { min: 0, max: 0 }
+  };
 }
 
 // Recommendations

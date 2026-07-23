@@ -11,8 +11,8 @@
 //   2. Set VITE_USE_MOCK=false in .env
 // ═══════════════════════════════════════════════════════════════════════════
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1').replace(/\/$/, '');
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
 
 // ─── Endpoint Definitions ───────────────────────────────────────────────────
 // Every endpoint the application needs. Used by the real fetch layer when

@@ -7,6 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.routes.carbon_routes import router as carbon_router
 from backend.routes.user_routes import router as user_router
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent / "green-financing-service"))
+
+from app.api.v1.routes.products import router as products_router
+from app.crud.product import compare_products as crud_compare_products
+
 
 app = FastAPI(
     title="Spring Boot Style FastAPI Application",
@@ -28,6 +35,13 @@ app.add_middleware(
 # Include routers
 app.include_router(carbon_router)
 app.include_router(user_router)
+app.include_router(products_router, prefix="/api/v1/green-financing/products", tags=["Green Financing"])
+
+
+# Compare products endpoint for Green Financing
+@app.get("/api/v1/green-financing/compare", tags=["Green Financing"])
+async def green_financing_compare():
+    return await crud_compare_products()
 
 
 @app.get("/actuator/health", tags=["Actuator"])

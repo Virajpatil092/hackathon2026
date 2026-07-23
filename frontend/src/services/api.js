@@ -46,8 +46,9 @@ export const ENDPOINTS = {
   dismissRecommendation: { method: 'GET',    path: '/recommendations/:id/dismiss' },
   applyRecommendation:   { method: 'POST',   path: '/recommendations/:id/apply' },
 
-  // Green financing
-  getGreenFinancing:     { method: 'GET',    path: '/green-financing/products' },
+  // Green financing & products
+  getGreenFinancing:     { method: 'GET',    path: '/green-products' },
+  getGreenProducts:      { method: 'GET',    path: '/green-products' },
   getGreenFinancingCompare: { method: 'GET',  path: '/green-financing/compare' },
   applyGreenProduct:     { method: 'POST',   path: '/green-financing/products/:id/apply' },
 
@@ -443,7 +444,10 @@ export async function getMCCStats() {
 
 // Recommendations
 export async function getRecommendations() {
-  if (!USE_MOCK) return apiRequest(ENDPOINTS.getRecommendations);
+  if (!USE_MOCK) {
+    const res = await apiRequest(ENDPOINTS.getRecommendations);
+    return Array.isArray(res) ? res : (res.recommendations || res.products || []);
+  }
   return mockRecommendations;
 }
 
@@ -459,7 +463,36 @@ export async function applyRecommendation(id) {
 
 // Green financing
 export async function getGreenFinancing() {
-  if (!USE_MOCK) return apiRequest(ENDPOINTS.getGreenFinancing);
+  if (!USE_MOCK) {
+    const res = await apiRequest(ENDPOINTS.getGreenFinancing);
+    const rawProducts = Array.isArray(res) ? res : (res.products || res.data || []);
+    
+    // Adapt new schema to the UI expected schema
+    return rawProducts.map(p => {
+      if (p.productId) {
+        return {
+          ...p,
+          id: p.productId,
+          type: (p.subCategory || p.category || '').replace(/_/g, ' '),
+          name: p.productName,
+          rate: p.financials?.interestRateMin ? `From ${p.financials.interestRateMin}%` : (p.financials?.rateType === 'ADVISORY_FEE_BASED' ? 'Advisory Fee' : 'N/A'),
+          rateValue: p.financials?.interestRateMin || 0,
+          description: p.description,
+          co2Saving: p.esgCriteria?.estimatedAnnualCO2ReductionKg ? `~${p.esgCriteria.estimatedAnnualCO2ReductionKg.toLocaleString()} kg CO₂e/yr` : 'ESG Aligned Impact',
+          badge: (p.esgCriteria?.certificationRequired || [])[0] || 'EU Taxonomy Aligned',
+          minAmount: p.financials?.loanAmountMin || 0,
+          maxAmount: p.financials?.loanAmountMax || 0,
+          term: p.financials?.tenureMonthsMin ? (
+            p.financials.tenureMonthsMin >= 12
+              ? `${Math.floor(p.financials.tenureMonthsMin / 12)}-${Math.floor((p.financials.tenureMonthsMax || p.financials.tenureMonthsMin) / 12)} yrs`
+              : `${p.financials.tenureMonthsMin}-${p.financials.tenureMonthsMax || p.financials.tenureMonthsMin} mos`
+          ) : 'Flexible',
+          features: p.features || [],
+        };
+      }
+      return p;
+    });
+  }
   return mockGreenFinancing;
 }
 

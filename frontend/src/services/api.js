@@ -42,7 +42,7 @@ export const ENDPOINTS = {
   applyRecommendation:   { method: 'POST',   path: '/recommendations/:id/apply' },
 
   // Green financing
-  getGreenFinancing:     { method: 'GET',    path: '/green-financing/products' },
+  getGreenFinancing:     { method: 'GET',    path: '/green-products' },
   getGreenFinancingCompare: { method: 'GET',  path: '/green-financing/compare' },
   applyGreenProduct:     { method: 'POST',   path: '/green-financing/products/:id/apply' },
 
@@ -429,7 +429,27 @@ export async function applyRecommendation(id) {
 
 // Green financing
 export async function getGreenFinancing() {
-  if (!USE_MOCK) return apiRequest(ENDPOINTS.getGreenFinancing);
+  if (!USE_MOCK) {
+    const response = await apiRequest(ENDPOINTS.getGreenFinancing);
+    return (response.products || []).map((product) => ({
+      id: product.productId,
+      type: product.category,
+      name: product.productName,
+      rate: product.financials?.interestRateMin ? `From ${product.financials.interestRateMin}%` : 'Custom pricing',
+      rateValue: product.financials?.interestRateMin || 0,
+      description: product.description,
+      co2Saving: product.esgCriteria?.estimatedAnnualCO2ReductionKg
+        ? `~${product.esgCriteria.estimatedAnnualCO2ReductionKg.toLocaleString()} kg CO₂e/year`
+        : 'Impact reporting available',
+      badge: product.esgCriteria?.esgCategory || 'Green product',
+      minAmount: product.financials?.loanAmountMin || 0,
+      maxAmount: product.financials?.loanAmountMax || 0,
+      term: product.financials?.tenureMonthsMax
+        ? `${product.financials.tenureMonthsMin || 0}-${product.financials.tenureMonthsMax} months`
+        : 'Custom term',
+      features: product.features || [],
+    }));
+  }
   return mockGreenFinancing;
 }
 
